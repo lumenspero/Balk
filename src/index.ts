@@ -24,3 +24,5 @@ export type {
 
 export { ConnectionGraph, normalizePath } from './graph.js';
 export { serializeConnectionMap, deserializeConnectionMap } from './serialize.js';
+export type { Analyzer, AnalyzerOptions } from './analyzer/index.js';
+export { JsTsAnalyzer, resolveImportPath } from './analyzer/index.js';

@@ -1,0 +1,343 @@
+import ts from 'typescript';
+import type { Analyzer, AnalyzerOptions } from './types.js';
+import { resolveImportPath } from './resolver.js';
+import type { ConnectionGraph } from '../graph.js';
+import { normalizePath } from '../graph.js';
+import type { SymbolType } from '../types.js';
+
+export class JsTsAnalyzer implements Analyzer {
+  readonly name = 'JsTsAnalyzer';
+  readonly supportedExtensions: readonly string[] = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'];
+
+  canAnalyze(filePath: string): boolean {
+    const normalized = normalizePath(filePath).toLowerCase();
+    return this.supportedExtensions.some((ext) => normalized.endsWith(ext));
+  }
+
+  analyzeFile(
+    filePath: string,
+    content: string,
+    graph: ConnectionGraph,
+    options?: AnalyzerOptions,
+  ): void {
+    const normalizedPath = normalizePath(filePath);
+    const language = isTypeScript(normalizedPath) ? 'typescript' : 'javascript';
+
+    // 1. Add file node to graph
+    graph.addFile(normalizedPath, language);
+
+    // 2. Parse SourceFile
+    const scriptKind = getScriptKind(normalizedPath);
+    const sourceFile = ts.createSourceFile(
+      normalizedPath,
+      content,
+      ts.ScriptTarget.Latest,
+      true,
+      scriptKind,
+    );
+
+    // Context tracking for analysis pass
+    const importsMap = new Map<string, { targetFile: string; importedName: string }>();
+    const topLevelSymbols = new Map<string, { id: string; type: SymbolType }>();
+
+    // Pass 1: Discover imports, symbols, exports, extends/implements
+    const visitFirstPass = (node: ts.Node): void => {
+      // ── Imports & Re-exports ────────────────────────────────────────
+      if (ts.isImportDeclaration(node)) {
+        handleImportDeclaration(node, normalizedPath, graph, options, importsMap);
+      } else if (ts.isExportDeclaration(node)) {
+        handleExportDeclaration(node, normalizedPath, graph, options);
+      } else if (ts.isCallExpression(node) && isRequireCall(node)) {
+        handleRequireCall(node, normalizedPath, graph, options, importsMap);
+      }
+
+      // ── Functions ──────────────────────────────────────────────────
+      if (ts.isFunctionDeclaration(node) && node.name) {
+        const name = node.name.text;
+        const sym = graph.addSymbol(normalizedPath, name, 'function');
+        topLevelSymbols.set(name, { id: sym.id, type: 'function' });
+
+        if (isExported(node)) {
+          graph.addRelationship('exports', normalizedPath, sym.id);
+        }
+      }
+
+      // ── Classes & Methods ───────────────────────────────────────────
+      if (ts.isClassDeclaration(node) && node.name) {
+        const className = node.name.text;
+        const classSym = graph.addSymbol(normalizedPath, className, 'class');
+        topLevelSymbols.set(className, { id: classSym.id, type: 'class' });
+
+        if (isExported(node)) {
+          graph.addRelationship('exports', normalizedPath, classSym.id);
+        }
+
+        // Class inheritance & interface implementations
+        if (node.heritageClauses) {
+          for (const clause of node.heritageClauses) {
+            const relType =
+              clause.token === ts.SyntaxKind.ExtendsKeyword ? 'extends' : 'implements';
+            for (const typeNode of clause.types) {
+              const baseName = typeNode.expression.getText(sourceFile);
+              const imported = importsMap.get(baseName);
+              const target = imported
+                ? `${imported.targetFile}:${imported.importedName}`
+                : baseName;
+              graph.addRelationship(relType, classSym.id, target);
+            }
+          }
+        }
+
+        // Class methods
+        for (const member of node.members) {
+          if (ts.isMethodDeclaration(member) && member.name && ts.isIdentifier(member.name)) {
+            const methodName = member.name.text;
+            const fullMethodName = `${className}.${methodName}`;
+            const methodSym = graph.addSymbol(normalizedPath, fullMethodName, 'method');
+            topLevelSymbols.set(fullMethodName, { id: methodSym.id, type: 'method' });
+          }
+        }
+      }
+
+      // ── Type Aliases & Interfaces ──────────────────────────────────
+      if (ts.isTypeAliasDeclaration(node)) {
+        const name = node.name.text;
+        const sym = graph.addSymbol(normalizedPath, name, 'type');
+        topLevelSymbols.set(name, { id: sym.id, type: 'type' });
+        if (isExported(node)) {
+          graph.addRelationship('exports', normalizedPath, sym.id);
+        }
+      }
+
+      if (ts.isInterfaceDeclaration(node)) {
+        const name = node.name.text;
+        const sym = graph.addSymbol(normalizedPath, name, 'type');
+        topLevelSymbols.set(name, { id: sym.id, type: 'type' });
+        if (isExported(node)) {
+          graph.addRelationship('exports', normalizedPath, sym.id);
+        }
+      }
+
+      // ── Top-level Variables / Functions assigned to const/let ─────
+      if (ts.isVariableStatement(node)) {
+        const isExp = isExported(node);
+        for (const decl of node.declarationList.declarations) {
+          if (ts.isIdentifier(decl.name)) {
+            const varName = decl.name.text;
+            const isFn =
+              decl.initializer &&
+              (ts.isArrowFunction(decl.initializer) || ts.isFunctionExpression(decl.initializer));
+            const symbolType: SymbolType = isFn
+              ? 'function'
+              : node.declarationList.flags & ts.NodeFlags.Const
+                ? 'constant'
+                : 'variable';
+
+            const sym = graph.addSymbol(normalizedPath, varName, symbolType);
+            topLevelSymbols.set(varName, { id: sym.id, type: symbolType });
+
+            if (isExp) {
+              graph.addRelationship('exports', normalizedPath, sym.id);
+            }
+          }
+        }
+      }
+
+      ts.forEachChild(node, visitFirstPass);
+    };
+
+    visitFirstPass(sourceFile);
+
+    // Pass 2: Discover call relationships with enclosing symbol awareness
+    const visitSecondPass = (node: ts.Node, currentSymbolId?: string): void => {
+      let enclosingSymbolId = currentSymbolId;
+
+      if (ts.isFunctionDeclaration(node) && node.name) {
+        enclosingSymbolId = `${normalizedPath}:${node.name.text}`;
+      } else if (ts.isClassDeclaration(node) && node.name) {
+        enclosingSymbolId = `${normalizedPath}:${node.name.text}`;
+      } else if (ts.isMethodDeclaration(node) && node.name && ts.isIdentifier(node.name)) {
+        const className = getParentClassName(node);
+        if (className) {
+          enclosingSymbolId = `${normalizedPath}:${className}.${node.name.text}`;
+        }
+      }
+
+      if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+        const callerId = enclosingSymbolId ?? normalizedPath;
+        handleCall(node, callerId, graph, importsMap, topLevelSymbols);
+      }
+
+      ts.forEachChild(node, (child) => visitSecondPass(child, enclosingSymbolId));
+    };
+
+    visitSecondPass(sourceFile);
+  }
+}
+
+// ── Helpers ─────────────────────────────────────────────────────────
+
+function isTypeScript(path: string): boolean {
+  const p = path.toLowerCase();
+  return p.endsWith('.ts') || p.endsWith('.tsx');
+}
+
+function getScriptKind(path: string): ts.ScriptKind {
+  const p = path.toLowerCase();
+  if (p.endsWith('.tsx')) return ts.ScriptKind.TSX;
+  if (p.endsWith('.jsx')) return ts.ScriptKind.JSX;
+  if (p.endsWith('.ts')) return ts.ScriptKind.TS;
+  return ts.ScriptKind.JS;
+}
+
+function isExported(node: ts.Node): boolean {
+  const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
+  return modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
+}
+
+function handleImportDeclaration(
+  node: ts.ImportDeclaration,
+  fromFile: string,
+  graph: ConnectionGraph,
+  options: AnalyzerOptions | undefined,
+  importsMap: Map<string, { targetFile: string; importedName: string }>,
+): void {
+  if (!ts.isStringLiteral(node.moduleSpecifier)) return;
+  const specifier = node.moduleSpecifier.text;
+  const targetFile = resolveImportPath(fromFile, specifier, options?.knownFiles);
+  if (!targetFile) return;
+
+  // Add file -> file import relationship
+  graph.addRelationship('imports', fromFile, targetFile);
+  graph.addRelationship('importedBy', targetFile, fromFile);
+
+  // Track imported symbols
+  if (node.importClause) {
+    // Default import
+    if (node.importClause.name) {
+      importsMap.set(node.importClause.name.text, { targetFile, importedName: 'default' });
+    }
+    // Named imports
+    if (node.importClause.namedBindings) {
+      if (ts.isNamedImports(node.importClause.namedBindings)) {
+        for (const element of node.importClause.namedBindings.elements) {
+          const importedName = element.propertyName ? element.propertyName.text : element.name.text;
+          const localName = element.name.text;
+          importsMap.set(localName, { targetFile, importedName });
+        }
+      } else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
+        importsMap.set(node.importClause.namedBindings.name.text, {
+          targetFile,
+          importedName: '*',
+        });
+      }
+    }
+  }
+}
+
+function handleExportDeclaration(
+  node: ts.ExportDeclaration,
+  fromFile: string,
+  graph: ConnectionGraph,
+  options: AnalyzerOptions | undefined,
+): void {
+  if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+    const specifier = node.moduleSpecifier.text;
+    const targetFile = resolveImportPath(fromFile, specifier, options?.knownFiles);
+    if (targetFile) {
+      graph.addRelationship('imports', fromFile, targetFile);
+      graph.addRelationship('importedBy', targetFile, fromFile);
+    }
+  }
+}
+
+function isRequireCall(node: ts.CallExpression): boolean {
+  return (
+    ts.isIdentifier(node.expression) &&
+    node.expression.text === 'require' &&
+    node.arguments.length > 0
+  );
+}
+
+function handleRequireCall(
+  node: ts.CallExpression,
+  fromFile: string,
+  graph: ConnectionGraph,
+  options: AnalyzerOptions | undefined,
+  importsMap: Map<string, { targetFile: string; importedName: string }>,
+): void {
+  const firstArg = node.arguments[0];
+  if (firstArg && ts.isStringLiteral(firstArg)) {
+    const specifier = firstArg.text;
+    const targetFile = resolveImportPath(fromFile, specifier, options?.knownFiles);
+    if (targetFile) {
+      graph.addRelationship('imports', fromFile, targetFile);
+      graph.addRelationship('importedBy', targetFile, fromFile);
+
+      // Check if assigned in const { foo } = require('./bar')
+      if (
+        node.parent &&
+        ts.isVariableDeclaration(node.parent) &&
+        ts.isObjectBindingPattern(node.parent.name)
+      ) {
+        for (const elt of node.parent.name.elements) {
+          if (ts.isIdentifier(elt.name)) {
+            const propName =
+              elt.propertyName && ts.isIdentifier(elt.propertyName)
+                ? elt.propertyName.text
+                : elt.name.text;
+            importsMap.set(elt.name.text, { targetFile, importedName: propName });
+          }
+        }
+      }
+    }
+  }
+}
+
+function getParentClassName(node: ts.MethodDeclaration): string | undefined {
+  if (node.parent && ts.isClassDeclaration(node.parent) && node.parent.name) {
+    return node.parent.name.text;
+  }
+  return undefined;
+}
+
+function handleCall(
+  node: ts.CallExpression | ts.NewExpression,
+  callerId: string,
+  graph: ConnectionGraph,
+  importsMap: Map<string, { targetFile: string; importedName: string }>,
+  topLevelSymbols: Map<string, { id: string; type: SymbolType }>,
+): void {
+  let calleeName = '';
+
+  if (ts.isIdentifier(node.expression)) {
+    calleeName = node.expression.text;
+  } else if (ts.isPropertyAccessExpression(node.expression)) {
+    calleeName = node.expression.name.text;
+  } else return;
+
+  // Ignore built-ins or standard keywords
+  if (
+    ['console', 'require', 'import', 'Math', 'Object', 'Array', 'Promise', 'JSON'].includes(
+      calleeName,
+    )
+  ) {
+    return;
+  }
+
+  // 1. Is it imported?
+  const imported = importsMap.get(calleeName);
+  if (imported) {
+    const targetSymbolId = `${imported.targetFile}:${imported.importedName}`;
+    graph.addRelationship('calls', callerId, targetSymbolId);
+    graph.addRelationship('calledBy', targetSymbolId, callerId);
+    return;
+  }
+
+  // 2. Is it defined in the same file?
+  const localSym = topLevelSymbols.get(calleeName);
+  if (localSym) {
+    graph.addRelationship('calls', callerId, localSym.id);
+    graph.addRelationship('calledBy', localSym.id, callerId);
+  }
+}
