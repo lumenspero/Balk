@@ -44,3 +44,17 @@ export {
   type PathFinderOptions,
   type FormattedPath,
 } from './renderer/index.js';
+
+export {
+  generateConnectionMap,
+  installGitHook,
+  uninstallGitHook,
+  checkConnectionMap,
+  getGitCommitHash,
+  isGitRepository,
+  type GenerateOptions,
+  type GenerateResult,
+  type HookResult,
+  type CheckOptions,
+  type CheckResult,
+} from './cli/index.js';

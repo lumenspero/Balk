@@ -1,0 +1,123 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { generateConnectionMap } from './generate.js';
+import { installGitHook, uninstallGitHook } from './hook-installer.js';
+import { checkConnectionMap } from './check.js';
+
+describe('CLI & Git Integration', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'balk-cli-test-'));
+  });
+
+  afterEach(() => {
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch {
+      // ignore
+    }
+  });
+
+  describe('generateConnectionMap', () => {
+    it('scans workspace and writes connection-map.json and connection-map.md', () => {
+      // Create sample repo structure
+      const srcDir = path.join(tmpDir, 'src');
+      fs.mkdirSync(srcDir, { recursive: true });
+
+      fs.writeFileSync(
+        path.join(srcDir, 'util.ts'),
+        'export function format(val: string) { return val; }',
+      );
+
+      fs.writeFileSync(
+        path.join(srcDir, 'main.ts'),
+        'import { format } from "./util.js"; format("hello");',
+      );
+
+      const res = generateConnectionMap({ cwd: tmpDir, timestamp: '2026-10-01T00:00:00Z' });
+
+      expect(fs.existsSync(res.jsonPath)).toBe(true);
+      expect(fs.existsSync(res.mdPath)).toBe(true);
+
+      const jsonContent = fs.readFileSync(res.jsonPath, 'utf8');
+      expect(jsonContent).toContain('"src/main.ts"');
+      expect(jsonContent).toContain('"src/util.ts"');
+
+      const mdContent = fs.readFileSync(res.mdPath, 'utf8');
+      expect(mdContent).toContain('# Repository Connection Map');
+      expect(mdContent).toContain('src/main.ts');
+    });
+
+    it('supports custom output directory', () => {
+      const srcDir = path.join(tmpDir, 'src');
+      fs.mkdirSync(srcDir, { recursive: true });
+      fs.writeFileSync(path.join(srcDir, 'main.ts'), 'const a = 1;');
+
+      const customOut = path.join(tmpDir, 'custom-out');
+      const res = generateConnectionMap({
+        cwd: tmpDir,
+        output: customOut,
+        timestamp: '2026-10-01T00:00:00Z',
+      });
+
+      expect(res.jsonPath).toContain('custom-out');
+      expect(fs.existsSync(res.jsonPath)).toBe(true);
+      expect(fs.existsSync(res.mdPath)).toBe(true);
+    });
+  });
+
+  describe('Git Hooks', () => {
+    it('installs and uninstalls pre-commit Git hook', () => {
+      // Create fake .git directory
+      const gitHooksDir = path.join(tmpDir, '.git', 'hooks');
+      fs.mkdirSync(gitHooksDir, { recursive: true });
+
+      // Install hook
+      const installRes = installGitHook(tmpDir);
+      expect(installRes.success).toBe(true);
+
+      const hookPath = path.join(gitHooksDir, 'pre-commit');
+      expect(fs.existsSync(hookPath)).toBe(true);
+
+      const hookContent = fs.readFileSync(hookPath, 'utf8');
+      expect(hookContent).toContain('npx balk');
+
+      // Uninstall hook
+      const uninstallRes = uninstallGitHook(tmpDir);
+      expect(uninstallRes.success).toBe(true);
+      expect(fs.existsSync(hookPath)).toBe(false);
+    });
+  });
+
+  describe('checkConnectionMap', () => {
+    it('returns isCurrent: true when connection map matches repo state', () => {
+      const srcDir = path.join(tmpDir, 'src');
+      fs.mkdirSync(srcDir, { recursive: true });
+      fs.writeFileSync(path.join(srcDir, 'main.ts'), 'const a = 1;');
+
+      // Generate map
+      generateConnectionMap({ cwd: tmpDir, timestamp: '2026-10-01T00:00:00Z' });
+
+      // Check map
+      const checkRes = checkConnectionMap({ cwd: tmpDir });
+      expect(checkRes.isCurrent).toBe(true);
+    });
+
+    it('returns isCurrent: false when workspace has changed', () => {
+      const srcDir = path.join(tmpDir, 'src');
+      fs.mkdirSync(srcDir, { recursive: true });
+      fs.writeFileSync(path.join(srcDir, 'main.ts'), 'const a = 1;');
+
+      generateConnectionMap({ cwd: tmpDir, timestamp: '2026-10-01T00:00:00Z' });
+
+      // Add a new file
+      fs.writeFileSync(path.join(srcDir, 'newfile.ts'), 'export const newVar = 2;');
+
+      const checkRes = checkConnectionMap({ cwd: tmpDir });
+      expect(checkRes.isCurrent).toBe(false);
+    });
+  });
+});
