@@ -36,11 +36,11 @@ The package should answer:
 
 It should not attempt to answer:
 
-* What are the repository's architectural communities?
-* Which modules are "god nodes"?
-* Which areas have the highest cohesion?
-* What architectural patterns exist?
-* What does each file do in natural language?
+- What are the repository's architectural communities?
+- Which modules are "god nodes"?
+- Which areas have the highest cohesion?
+- What architectural patterns exist?
+- What does each file do in natural language?
 
 Those may be useful analyses, but they are outside the primary purpose of this package.
 
@@ -155,11 +155,11 @@ src/sim/sim.ts:step
 
 Symbols should eventually include:
 
-* functions
-* methods
-* classes
-* exported symbols
-* relevant constants/types where relationships can be established reliably
+- functions
+- methods
+- classes
+- exported symbols
+- relevant constants/types where relationships can be established reliably
 
 ## 4.3 Data Files
 
@@ -332,11 +332,11 @@ Detect data paths referenced directly by source code.
 Examples:
 
 ```javascript
-readFile("data/source.json")
+readFile('data/source.json');
 ```
 
 ```typescript
-readParquet("data/titles.parquet")
+readParquet('data/titles.parquet');
 ```
 
 ```python
@@ -437,17 +437,17 @@ Support:
 
 The analyzer should identify, where reliably possible:
 
-* imports
-* exports
-* re-exports
-* functions
-* classes
-* methods
-* function calls
-* references to imported symbols
-* inheritance
-* type references
-* dynamic imports where statically detectable
+- imports
+- exports
+- re-exports
+- functions
+- classes
+- methods
+- function calls
+- references to imported symbols
+- inheritance
+- type references
+- dynamic imports where statically detectable
 
 The first implementation should prioritize **reliable relationships over exhaustive relationships**.
 
@@ -638,10 +638,10 @@ The purpose is to expose useful paths without recreating the entire graph as pro
 
 Path generation should therefore have sensible limits for:
 
-* traversal depth
-* duplicate paths
-* cycles
-* extremely high-degree nodes
+- traversal depth
+- duplicate paths
+- cycles
+- extremely high-degree nodes
 
 The complete relationship set remains available in JSON.
 
@@ -736,17 +736,8 @@ Potential configuration:
 
 ```json
 {
-  "include": [
-    "src/**",
-    "scripts/**",
-    "data/**"
-  ],
-  "exclude": [
-    "node_modules/**",
-    "dist/**",
-    "build/**",
-    ".git/**"
-  ],
+  "include": ["src/**", "scripts/**", "data/**"],
+  "exclude": ["node_modules/**", "dist/**", "build/**", ".git/**"],
   "output": "connection-map",
   "data": {
     "extensions": [
@@ -839,42 +830,42 @@ Connection Map remains responsible for AI-oriented interconnected-code context.
 
 ### Include
 
-* JavaScript
-* JSX
-* TypeScript
-* TSX
-* file relationships
-* symbol relationships
-* import/export relationships
-* function/method call relationships where reliably detectable
-* common data-file recognition
-* JSON
-* JSONL / NDJSON
-* CSV
-* TSV
-* Parquet
-* YAML
-* TOML
-* XML
-* SQLite
-* data producer/consumer relationships
-* explicit data-flow configuration
-* canonical JSON graph
-* human-readable Markdown
-* Git commit integration
-* deterministic output
+- JavaScript
+- JSX
+- TypeScript
+- TSX
+- file relationships
+- symbol relationships
+- import/export relationships
+- function/method call relationships where reliably detectable
+- common data-file recognition
+- JSON
+- JSONL / NDJSON
+- CSV
+- TSV
+- Parquet
+- YAML
+- TOML
+- XML
+- SQLite
+- data producer/consumer relationships
+- explicit data-flow configuration
+- canonical JSON graph
+- human-readable Markdown
+- Git commit integration
+- deterministic output
 
 ### Defer
 
-* Python AST analysis
-* other programming languages
-* visual graph generation
-* browser UI
-* repository hosting/integration
-* LLM-based analysis
-* natural-language descriptions of code
-* deep data-schema analysis
-* sophisticated incremental graph computation
+- Python AST analysis
+- other programming languages
+- visual graph generation
+- browser UI
+- repository hosting/integration
+- LLM-based analysis
+- natural-language descriptions of code
+- deep data-schema analysis
+- sophisticated incremental graph computation
 
 ---
 
@@ -917,17 +908,17 @@ appears as one connected repository graph.
 
 After the core artifact is stable:
 
-* Mermaid/visual graph generation
-* interactive HTML viewer
-* Python support improvements
-* additional language analyzers
-* data schema summaries
-* richer dependency traversal
-* incremental graph updates
-* IDE integration
-* AI-agent-specific context filtering
-* configurable context views
-* integration with Graphify
+- Mermaid/visual graph generation
+- interactive HTML viewer
+- Python support improvements
+- additional language analyzers
+- data schema summaries
+- richer dependency traversal
+- incremental graph updates
+- IDE integration
+- AI-agent-specific context filtering
+- configurable context views
+- integration with Graphify
 
 A future Graphify integration could allow the two tools to complement each other:
 
@@ -952,12 +943,12 @@ Build the canonical graph model.
 
 Deliver:
 
-* file nodes
-* artifact nodes
-* symbol nodes
-* typed relationships
-* JSON serialization
-* deterministic output
+- file nodes
+- artifact nodes
+- symbol nodes
+- typed relationships
+- JSON serialization
+- deterministic output
 
 Success criterion:
 
@@ -980,13 +971,13 @@ Implement source analysis for:
 
 Deliver:
 
-* imports
-* exports
-* file dependencies
-* functions
-* classes
-* calls
-* reverse relationships
+- imports
+- exports
+- file dependencies
+- functions
+- classes
+- calls
+- reverse relationships
 
 Success criterion:
 
@@ -1030,11 +1021,11 @@ Generate the compact `connection-map.md`.
 
 Implement:
 
-* repository overview
-* file connections
-* symbol connections
-* data connections
-* useful connection paths
+- repository overview
+- file connections
+- symbol connections
+- data connections
+- useful connection paths
 
 Success criterion:
 
