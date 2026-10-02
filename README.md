@@ -1,16 +1,16 @@
 <p align="center">
-  <img src="assets/molly.png" alt="Balk — Repository Connection Map for AI Agents" width="100%">
+  <img src="assets/molly.png" alt="Balk2 — Repository Connection Map for AI Agents" width="100%">
 </p>
 
-# Balk — Repository Connection Map
+# Balk2 — Repository Connection Map
 
-[![npm version](https://img.shields.io/npm/v/balk.svg)](https://www.npmjs.com/package/balk)
+[![npm version](https://img.shields.io/npm/v/balk2.svg)](https://www.npmjs.com/package/balk2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/balk.svg)](https://nodejs.org)
+[![Node.js Version](https://img.shields.io/node/v/balk2.svg)](https://nodejs.org)
 
-**Balk** generates compact, deterministic **Repository Connection Maps** designed specifically for AI-assisted interconnected code changes.
+**Balk2** generates compact, deterministic **Repository Connection Maps** designed specifically for AI-assisted interconnected code changes.
 
-When building or modifying complex features that span multiple files, modules, directories, programming languages, or data pipeline artifacts, Balk answers:
+When building or modifying complex features that span multiple files, modules, directories, programming languages, or data pipeline artifacts, Balk2 answers:
 
 > _"If I change this file, function, or data artifact, what other repository components are structurally connected to it and may need to be inspected?"_
 
@@ -18,7 +18,7 @@ When building or modifying complex features that span multiple files, modules, d
 
 ## Output Artifacts
 
-Balk scans your codebase and generates two canonical artifacts:
+Balk2 scans your codebase and generates two canonical artifacts:
 
 1. **`connection-map.md`** — A compact, human-readable Markdown summary designed to be provided directly to AI coding assistants (Claude, Gemini, ChatGPT, Cursor, Antigravity) as context.
 2. **`connection-map.json`** — The canonical machine-readable graph representation for tooling, scripts, and future integrations.
@@ -37,11 +37,11 @@ Balk scans your codebase and generates two canonical artifacts:
 - **Data Artifact & Pipeline Lineage**:
   - Auto-recognizes **JSON**, **JSONL/NDJSON**, **CSV**, **TSV**, **Parquet**, **YAML**, **TOML**, **XML**, **SQLite** database files.
   - Automatically traces file read/write operations (`generates`, `generatedBy`, `consumes`, `consumedBy`, `reads`).
-- **Configuration & Explicit Lineage (`.balk.json`)**:
+- **Configuration & Explicit Lineage (`.balk2.json`)**:
   - Declare custom path filters (`include`, `exclude`) and output targets.
   - Declare explicit pipeline lineage for dynamic data paths.
 - **Git Integration & Automation**:
-  - One-command pre-commit Git hook setup (`npx balk install`).
+  - One-command pre-commit Git hook setup (`npx balk2 install`).
   - Automatically records Git commit hash metadata (`git rev-parse --short HEAD`).
 
 ---
@@ -54,18 +54,18 @@ Install globally or as a project devDependency:
 
 ```bash
 # Global installation
-npm install -g balk
+npm install -g balk2
 
 # Or project-level dev dependency
-npm install --save-dev balk
+npm install --save-dev balk2
 ```
 
 ### Basic Usage
 
-Run `balk` inside any repository:
+Run `balk2` inside any repository:
 
 ```bash
-npx balk
+npx balk2
 ```
 
 This generates:
@@ -77,48 +77,48 @@ This generates:
 
 ## CLI Commands & Options
 
-### `balk [generate]`
+### `balk2 [generate]`
 
 Scans the repository, builds the connection graph, and writes `connection-map.json` and `connection-map.md`.
 
 ```bash
 # Default generation
-npx balk
+npx balk2
 
 # Custom output directory or base filename
-npx balk --output build/connection-map
-npx balk -o custom-dir/
+npx balk2 --output build/connection-map
+npx balk2 -o custom-dir/
 ```
 
-### `balk install`
+### `balk2 install`
 
 Installs a Git `pre-commit` hook in `.git/hooks/pre-commit`. The hook automatically regenerates the connection map and stages updated artifacts whenever you make a commit.
 
 ```bash
-npx balk install
+npx balk2 install
 ```
 
-### `balk uninstall`
+### `balk2 uninstall`
 
-Removes the installed Balk Git pre-commit hook.
+Removes the installed Balk2 Git pre-commit hook.
 
 ```bash
-npx balk uninstall
+npx balk2 uninstall
 ```
 
-### `balk check`
+### `balk2 check`
 
 Validates configuration and checks whether `connection-map.json` is up to date with current repository state. Exits with code `0` if current, or `1` if out of date. Useful for CI checks.
 
 ```bash
-npx balk check
+npx balk2 check
 ```
 
 ---
 
-## Configuration (`.balk.json`)
+## Configuration (`.balk2.json`)
 
-You can optionally place a `.balk.json` configuration file in the root of your repository to customize include/exclude rules, output locations, and explicit data pipeline rules.
+You can optionally place a `.balk2.json` configuration file in the root of your repository to customize include/exclude rules, output locations, and explicit data pipeline rules.
 
 ```json
 {
@@ -161,7 +161,7 @@ You can optionally place a `.balk.json` configuration file in the root of your r
 
 ## Programmatic API
 
-Balk provides a complete TypeScript / JavaScript API for programmatic usage:
+Balk2 provides a complete TypeScript / JavaScript API for programmatic usage:
 
 ```typescript
 import {
@@ -172,7 +172,7 @@ import {
   renderMarkdown,
   serializeConnectionMap,
   generateConnectionMap,
-} from 'balk';
+} from 'balk2';
 
 // High-level API: Generate map for a directory
 const { jsonPath, mdPath, map } = generateConnectionMap({
@@ -206,8 +206,8 @@ const jsonString = serializeConnectionMap(mapObj);
 
 ```bash
 # Clone repository
-git clone https://github.com/shino/Balk.git
-cd Balk
+git clone https://github.com/lumenspero/Balk2.git
+cd Balk2
 
 # Install dependencies
 npm install

@@ -5,7 +5,7 @@ import { ConnectionGraph } from '../graph.js';
 import { JsTsAnalyzer, PythonAnalyzer, type Analyzer } from '../analyzer/index.js';
 import { registerDataArtifacts } from '../data/formats.js';
 import { normalizePath } from '../graph.js';
-import { loadBalkConfig, filterFilesWithConfig, applyExplicitLineage } from '../config/index.js';
+import { loadBalk2Config, filterFilesWithConfig, applyExplicitLineage } from '../config/index.js';
 
 export interface CheckOptions {
   readonly cwd?: string;
@@ -35,13 +35,13 @@ const DEFAULT_EXCLUDES = new Set([
  */
 export function checkConnectionMap(options: CheckOptions = {}): CheckResult {
   const rootDir = path.resolve(options.cwd ?? process.cwd());
-  const balkConfig = loadBalkConfig(rootDir);
+  const balk2Config = loadBalk2Config(rootDir);
   const jsonPath = path.join(rootDir, 'connection-map.json');
 
   if (!fs.existsSync(jsonPath)) {
     return {
       isCurrent: false,
-      message: 'connection-map.json does not exist. Run "balk" to generate.',
+      message: 'connection-map.json does not exist. Run "balk2" to generate.',
     };
   }
 
@@ -53,12 +53,12 @@ export function checkConnectionMap(options: CheckOptions = {}): CheckResult {
     const analyzers: Analyzer[] = [new JsTsAnalyzer(), new PythonAnalyzer()];
     const graph = new ConnectionGraph();
     const rawFiles = scanFiles(rootDir);
-    const allFiles = filterFilesWithConfig(rawFiles, balkConfig?.include, balkConfig?.exclude);
+    const allFiles = filterFilesWithConfig(rawFiles, balk2Config?.include, balk2Config?.exclude);
 
     registerDataArtifacts(allFiles, graph);
 
-    if (balkConfig?.data?.lineage) {
-      applyExplicitLineage(balkConfig.data.lineage, graph);
+    if (balk2Config?.data?.lineage) {
+      applyExplicitLineage(balk2Config.data.lineage, graph);
     }
 
     for (const relFile of allFiles) {
@@ -89,7 +89,7 @@ export function checkConnectionMap(options: CheckOptions = {}): CheckResult {
     } else {
       return {
         isCurrent: false,
-        message: 'connection-map.json is out of date. Run "balk" to regenerate.',
+        message: 'connection-map.json is out of date. Run "balk2" to regenerate.',
       };
     }
   } catch (err) {

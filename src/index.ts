@@ -1,5 +1,5 @@
 /**
- * Balk — Repository Connection Map
+ * Balk2 — Repository Connection Map
  *
  * Generate compact, deterministic connection maps designed
  * for AI-assisted interconnected code changes.
@@ -60,11 +60,11 @@ export {
 } from './cli/index.js';
 
 export {
-  loadBalkConfig,
+  loadBalk2Config,
   applyExplicitLineage,
   filterFilesWithConfig,
   matchPattern,
-  type BalkConfig,
+  type Balk2Config,
   type DataConfig,
   type DataLineageEntry,
 } from './config/index.js';

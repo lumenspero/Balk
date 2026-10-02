@@ -1,12 +1,12 @@
 {
-  "name": "balk",
-  "version": "0.1.0",
+  "name": "balk2",
+  "version": "1.0.0",
   "description": "Generate repository connection maps for AI-assisted code changes",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "balk": "dist/cli.js"
+    "balk2": "dist/cli.js"
   },
   "files": [
     "dist"

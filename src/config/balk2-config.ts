@@ -31,15 +31,15 @@ export interface BalkConfig {
 }
 
 /**
- * Load and parse .balk.json configuration file if present.
+ * Load and parse .balk2.json configuration file if present.
  */
-export function loadBalkConfig(
+export function loadBalk2Config(
   cwd: string = process.cwd(),
   customPath?: string,
 ): BalkConfig | undefined {
   const configPath = customPath
     ? path.resolve(cwd, customPath)
-    : path.join(path.resolve(cwd), '.balk.json');
+    : path.join(path.resolve(cwd), '.balk2.json');
 
   if (!fs.existsSync(configPath)) {
     return undefined;

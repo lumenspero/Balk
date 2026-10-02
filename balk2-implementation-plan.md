@@ -1,4 +1,4 @@
-# Balk — Repository Connection Map
+# Balk2 — Repository Connection Map
 
 ## Implementation Plan
 
@@ -654,7 +654,7 @@ The package should support automatic regeneration at commit time.
 Preferred interface:
 
 ```bash
-npx balk install
+npx balk2 install
 ```
 
 This installs a Git hook.
@@ -691,25 +691,25 @@ connection-map version
 Initial CLI:
 
 ```bash
-balk
+balk2
 ```
 
 Generate the map.
 
 ```bash
-balk install
+balk2 install
 ```
 
 Install Git integration.
 
 ```bash
-balk uninstall
+balk2 uninstall
 ```
 
 Remove Git integration.
 
 ```bash
-balk check
+balk2 check
 ```
 
 Validate configuration and report whether the generated map is current.
@@ -717,7 +717,7 @@ Validate configuration and report whether the generated map is current.
 Optional:
 
 ```bash
-balk --output graphify-out
+balk2 --output graphify-out
 ```
 
 The package should have sensible defaults so that the basic installation requires little configuration.
@@ -729,7 +729,7 @@ The package should have sensible defaults so that the basic installation require
 Optional repository configuration:
 
 ```text
-.balk.json
+.balk2.json
 ```
 
 Potential configuration:
@@ -1038,7 +1038,7 @@ The resulting document can be handed directly to an AI agent as repository conte
 Implement:
 
 ```bash
-balk install
+balk2 install
 ```
 
 and automatic regeneration on commit.
@@ -1054,7 +1054,7 @@ Every committed repository state has a corresponding current connection map.
 Add:
 
 ```text
-.balk.json
+.balk2.json
 ```
 
 and explicit data relationship declarations.
@@ -1077,23 +1077,23 @@ Python and JS/TS can participate in the same repository connection map.
 
 # 24. Package Identity
 
-The npm package name is **`balk`**.
+The npm package name is **`balk2`**.
 
 The package identity should be consistent across the implementation, CLI, documentation, configuration, and examples:
 
-- npm package: `balk`
-- CLI command: `balk`
-- configuration file: `.balk.json`
+- npm package: `balk2`
+- CLI command: `balk2`
+- configuration file: `.balk2.json`
 - generated Markdown artifact: `connection-map.md`
 - canonical machine-readable artifact: `connection-map.json`
 - optional output directory: `connection-map/`
 
 The distinction is intentional:
 
-- **`balk`** identifies the tool/package.
+- **`balk2`** identifies the tool/package.
 - **`connection-map`** identifies the generated output and artifact format.
 
-All future implementation and documentation references should use `balk` rather than the previous package name.
+All future implementation and documentation references should use `balk2` rather than the previous package name.
 
 # 25. Definition of Done
 

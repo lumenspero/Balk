@@ -2,17 +2,17 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { loadBalkConfig } from './balk-config.js';
+import { loadBalk2Config } from './balk2-config.js';
 import { applyExplicitLineage } from './lineage-processor.js';
 import { filterFilesWithConfig, matchPattern } from './file-matcher.js';
 import { ConnectionGraph } from '../graph.js';
 import { generateConnectionMap } from '../cli/generate.js';
 
-describe('.balk.json Configuration & Data Lineage', () => {
+describe('.balk2.json Configuration & Data Lineage', () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'balk-config-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'balk2-config-test-'));
   });
 
   afterEach(() => {
@@ -23,8 +23,8 @@ describe('.balk.json Configuration & Data Lineage', () => {
     }
   });
 
-  describe('loadBalkConfig', () => {
-    it('loads and parses .balk.json from workspace', () => {
+  describe('loadBalk2Config', () => {
+    it('loads and parses .balk2.json from workspace', () => {
       const configData = {
         include: ['src/**', 'scripts/**'],
         exclude: ['dist/**'],
@@ -34,16 +34,16 @@ describe('.balk.json Configuration & Data Lineage', () => {
         },
       };
 
-      fs.writeFileSync(path.join(tmpDir, '.balk.json'), JSON.stringify(configData, null, 2));
+      fs.writeFileSync(path.join(tmpDir, '.balk2.json'), JSON.stringify(configData, null, 2));
 
-      const config = loadBalkConfig(tmpDir);
+      const config = loadBalk2Config(tmpDir);
       expect(config).toBeDefined();
       expect(config?.include).toEqual(['src/**', 'scripts/**']);
       expect(config?.output).toBe('custom-map');
       expect(config?.data?.lineage).toHaveLength(1);
     });
 
-    it('returns undefined if .balk.json does not exist', () => {
+    it('returns undefined if .balk2.json does not exist', () => {
       expect(loadBalkConfig(tmpDir)).toBeUndefined();
     });
   });
@@ -153,9 +153,9 @@ describe('.balk.json Configuration & Data Lineage', () => {
   });
 
   describe('Milestone 6 Integration Scenario', () => {
-    it('generates connection map honoring .balk.json config and explicit lineage', () => {
-      // 1. Setup repo with .balk.json
-      const balkConfig = {
+    it('generates connection map honoring .balk2.json config and explicit lineage', () => {
+      // 1. Setup repo with .balk2.json
+      const balk2Config = {
         output: 'connection-map',
         data: {
           lineage: [
@@ -176,7 +176,7 @@ describe('.balk.json Configuration & Data Lineage', () => {
         },
       };
 
-      fs.writeFileSync(path.join(tmpDir, '.balk.json'), JSON.stringify(balkConfig, null, 2));
+      fs.writeFileSync(path.join(tmpDir, '.balk2.json'), JSON.stringify(balkConfig, null, 2));
 
       // Setup source files
       const srcDataDir = path.join(tmpDir, 'src', 'data');

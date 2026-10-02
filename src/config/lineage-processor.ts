@@ -1,9 +1,9 @@
 import type { ConnectionGraph } from '../graph.js';
-import type { DataLineageEntry } from './balk-config.js';
+import type { DataLineageEntry } from './balk2-config.js';
 import { addDataRelationship } from '../data/data-analyzer.js';
 
 /**
- * Apply explicit data lineage rules from .balk.json configuration to the ConnectionGraph.
+ * Apply explicit data lineage rules from .balk2.json configuration to the ConnectionGraph.
  */
 export function applyExplicitLineage(
   lineageRules: readonly DataLineageEntry[],

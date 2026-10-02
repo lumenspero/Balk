@@ -3,6 +3,6 @@ export {
   type BalkConfig,
   type DataConfig,
   type DataLineageEntry,
-} from './balk-config.js';
+} from './balk2-config.js';
 export { applyExplicitLineage } from './lineage-processor.js';
 export { filterFilesWithConfig, matchPattern } from './file-matcher.js';

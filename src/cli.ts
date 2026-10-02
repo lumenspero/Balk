@@ -22,7 +22,7 @@ function main(): void {
   }
 
   if (args.includes('-v') || args.includes('--version')) {
-    console.log('balk v0.1.0');
+    console.log('balk2 v0.1.0');
     process.exit(0);
   }
 
@@ -73,10 +73,10 @@ function main(): void {
 
 function printHelp(): void {
   console.log(`
-balk — Repository Connection Map Generator for AI Agents
+balk2 — Repository Connection Map Generator for AI Agents
 
 Usage:
-  balk [command] [options]
+  balk2 [command] [options]
 
 Commands:
   generate              Generate connection-map.json and connection-map.md (default)

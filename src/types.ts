@@ -1,5 +1,5 @@
 /**
- * Core type definitions for the Balk connection map graph model.
+ * Core type definitions for the Balk2 connection map graph model.
  *
  * The graph supports three node types (files, symbols, artifacts)
  * and typed directional relationships between them.

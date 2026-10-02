@@ -10,7 +10,7 @@ describe('CLI & Git Integration', () => {
   let tmpDir: string;
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'balk-cli-test-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'balk2-cli-test-'));
   });
 
   afterEach(() => {
@@ -83,7 +83,7 @@ describe('CLI & Git Integration', () => {
       expect(fs.existsSync(hookPath)).toBe(true);
 
       const hookContent = fs.readFileSync(hookPath, 'utf8');
-      expect(hookContent).toContain('npx balk');
+      expect(hookContent).toContain('npx balk2');
 
       // Uninstall hook
       const uninstallRes = uninstallGitHook(tmpDir);

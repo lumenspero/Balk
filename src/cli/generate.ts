@@ -42,7 +42,7 @@ const DEFAULT_EXCLUDES = new Set([
  */
 export function generateConnectionMap(options: GenerateOptions = {}): GenerateResult {
   const rootDir = path.resolve(options.cwd ?? process.cwd());
-  const balkConfig = loadBalkConfig(rootDir);
+  const balk2Config = loadBalk2Config(rootDir);
   const analyzers: Analyzer[] = [new JsTsAnalyzer(), new PythonAnalyzer()];
   const graph = new ConnectionGraph();
 
@@ -50,16 +50,16 @@ export function generateConnectionMap(options: GenerateOptions = {}): GenerateRe
   const rawFiles = scanFiles(rootDir);
   const allRelativeFiles = filterFilesWithConfig(
     rawFiles,
-    balkConfig?.include,
-    balkConfig?.exclude,
+    balk2Config?.include,
+    balk2Config?.exclude,
   );
 
   // 2. Register data artifacts
   registerDataArtifacts(allRelativeFiles, graph);
 
-  // 3. Apply explicit data lineage rules from .balk.json
-  if (balkConfig?.data?.lineage) {
-    applyExplicitLineage(balkConfig.data.lineage, graph);
+  // 3. Apply explicit data lineage rules from .balk2.json
+  if (balk2Config?.data?.lineage) {
+    applyExplicitLineage(balk2Config.data.lineage, graph);
   }
 
   // 4. Analyze code files with matching analyzers

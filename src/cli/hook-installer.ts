@@ -2,12 +2,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { isGitRepository } from './git-utils.js';
 
-const HOOK_START_MARKER = '# BEGIN BALK-GIT-HOOK';
-const HOOK_END_MARKER = '# END BALK-GIT-HOOK';
+const HOOK_START_MARKER = '# BEGIN BALK2-GIT-HOOK';
+const HOOK_END_MARKER = '# END BALK2-GIT-HOOK';
 
 const HOOK_CONTENT = `${HOOK_START_MARKER}
 # Automatically regenerate connection map before commit
-npx balk
+npx balk2
 
 if [ -f "connection-map.json" ] && [ -f "connection-map.md" ]; then
   git add connection-map.json connection-map.md 2>/dev/null || true
@@ -47,7 +47,7 @@ export function installGitHook(cwd: string = process.cwd()): HookResult {
     if (existing.includes(HOOK_START_MARKER)) {
       return {
         success: true,
-        message: 'Balk Git hook is already installed',
+        message: 'Balk2 Git hook is already installed',
         hookPath,
       };
     }
@@ -88,7 +88,7 @@ export function uninstallGitHook(cwd: string = process.cwd()): HookResult {
   if (!existing.includes(HOOK_START_MARKER)) {
     return {
       success: true,
-      message: 'Pre-commit Git hook does not contain Balk hook',
+      message: 'Pre-commit Git hook does not contain Balk2 hook',
       hookPath,
     };
   }
@@ -121,7 +121,7 @@ export function uninstallGitHook(cwd: string = process.cwd()): HookResult {
 
   return {
     success: true,
-    message: `Uninstalled Balk Git hook from ${hookPath}`,
+    message: `Uninstalled Balk2 Git hook from ${hookPath}`,
     hookPath,
   };
 }
