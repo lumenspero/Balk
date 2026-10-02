@@ -1,6 +1,6 @@
 {
   "name": "@lumenspero/balk2",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Generate repository connection maps for AI-assisted code changes",
   "type": "module",
   "main": "dist/index.js",
