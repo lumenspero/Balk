@@ -44,7 +44,7 @@ describe('.balk2.json Configuration & Data Lineage', () => {
     });
 
     it('returns undefined if .balk2.json does not exist', () => {
-      expect(loadBalkConfig(tmpDir)).toBeUndefined();
+      expect(loadBalk2Config(tmpDir)).toBeUndefined();
     });
   });
 
