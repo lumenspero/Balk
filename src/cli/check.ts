@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { deserializeConnectionMap, serializeConnectionMap } from '../serialize.js';
 import { ConnectionGraph } from '../graph.js';
-import { JsTsAnalyzer } from '../analyzer/js-ts-analyzer.js';
+import { JsTsAnalyzer, PythonAnalyzer, type Analyzer } from '../analyzer/index.js';
 import { registerDataArtifacts } from '../data/formats.js';
 import { normalizePath } from '../graph.js';
 import { loadBalkConfig, filterFilesWithConfig, applyExplicitLineage } from '../config/index.js';
@@ -50,7 +50,7 @@ export function checkConnectionMap(options: CheckOptions = {}): CheckResult {
     const existingMap = deserializeConnectionMap(existingContent);
 
     // Build fresh graph
-    const jsTsAnalyzer = new JsTsAnalyzer();
+    const analyzers: Analyzer[] = [new JsTsAnalyzer(), new PythonAnalyzer()];
     const graph = new ConnectionGraph();
     const rawFiles = scanFiles(rootDir);
     const allFiles = filterFilesWithConfig(rawFiles, balkConfig?.include, balkConfig?.exclude);
@@ -62,12 +62,14 @@ export function checkConnectionMap(options: CheckOptions = {}): CheckResult {
     }
 
     for (const relFile of allFiles) {
-      if (jsTsAnalyzer.canAnalyze(relFile)) {
-        try {
-          const content = fs.readFileSync(path.join(rootDir, relFile), 'utf8');
-          jsTsAnalyzer.analyzeFile(relFile, content, graph, { knownFiles: allFiles });
-        } catch {
-          // ignore
+      for (const analyzer of analyzers) {
+        if (analyzer.canAnalyze(relFile)) {
+          try {
+            const content = fs.readFileSync(path.join(rootDir, relFile), 'utf8');
+            analyzer.analyzeFile(relFile, content, graph, { knownFiles: allFiles });
+          } catch {
+            // ignore
+          }
         }
       }
     }

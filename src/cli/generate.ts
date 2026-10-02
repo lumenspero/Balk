@@ -3,7 +3,7 @@ import * as path from 'path';
 import { ConnectionGraph, normalizePath } from '../graph.js';
 import { serializeConnectionMap } from '../serialize.js';
 import { renderMarkdown } from '../renderer/markdown-renderer.js';
-import { JsTsAnalyzer } from '../analyzer/js-ts-analyzer.js';
+import { JsTsAnalyzer, PythonAnalyzer, type Analyzer } from '../analyzer/index.js';
 import { registerDataArtifacts } from '../data/formats.js';
 import { getGitCommitHash } from './git-utils.js';
 import { loadBalkConfig, filterFilesWithConfig, applyExplicitLineage } from '../config/index.js';
@@ -43,7 +43,7 @@ const DEFAULT_EXCLUDES = new Set([
 export function generateConnectionMap(options: GenerateOptions = {}): GenerateResult {
   const rootDir = path.resolve(options.cwd ?? process.cwd());
   const balkConfig = loadBalkConfig(rootDir);
-  const jsTsAnalyzer = new JsTsAnalyzer();
+  const analyzers: Analyzer[] = [new JsTsAnalyzer(), new PythonAnalyzer()];
   const graph = new ConnectionGraph();
 
   // 1. Scan directory for repository files & apply config filters
@@ -62,18 +62,20 @@ export function generateConnectionMap(options: GenerateOptions = {}): GenerateRe
     applyExplicitLineage(balkConfig.data.lineage, graph);
   }
 
-  // 4. Analyze code files
+  // 4. Analyze code files with matching analyzers
   for (const relFile of allRelativeFiles) {
-    if (jsTsAnalyzer.canAnalyze(relFile)) {
-      const fullPath = path.join(rootDir, relFile);
-      try {
-        const content = fs.readFileSync(fullPath, 'utf8');
-        jsTsAnalyzer.analyzeFile(relFile, content, graph, {
-          rootDir,
-          knownFiles: allRelativeFiles,
-        });
-      } catch {
-        // Skip unreadable files gracefully
+    for (const analyzer of analyzers) {
+      if (analyzer.canAnalyze(relFile)) {
+        const fullPath = path.join(rootDir, relFile);
+        try {
+          const content = fs.readFileSync(fullPath, 'utf8');
+          analyzer.analyzeFile(relFile, content, graph, {
+            rootDir,
+            knownFiles: allRelativeFiles,
+          });
+        } catch {
+          // Skip unreadable files gracefully
+        }
       }
     }
   }

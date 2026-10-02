@@ -59,6 +59,10 @@ export function inferDataRelationshipType(callContext: string): 'generates' | 'c
     return 'generates';
   }
 
+  if (/(['"])(r|rb)\1/i.test(lower)) {
+    return 'consumes';
+  }
+
   return 'reads';
 }
 
