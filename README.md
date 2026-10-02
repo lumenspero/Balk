@@ -4,9 +4,9 @@
 
 # Balk2 — Repository Connection Map
 
-[![npm version](https://img.shields.io/npm/v/balk2.svg)](https://www.npmjs.com/package/balk2)
+[![npm version](https://img.shields.io/npm/v/@lumenspero/balk2.svg?v=1)](https://www.npmjs.com/package/@lumenspero/balk2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/balk2.svg)](https://nodejs.org)
+[![Node.js Version](https://img.shields.io/node/v/@lumenspero/balk2.svg?v=1)](https://nodejs.org)
 
 **Balk2** generates compact, deterministic **Repository Connection Maps** designed specifically for AI-assisted interconnected code changes.
 
