@@ -238,5 +238,4 @@ npm run build
 
 [MIT License](LICENSE) © 2026
 
-
 [def]: https://donate.stripe.com/4gM3cv4L14y03Ql18k0Fi04
