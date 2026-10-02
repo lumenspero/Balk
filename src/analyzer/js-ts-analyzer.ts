@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import * as ts from 'typescript';
 import type { Analyzer, AnalyzerOptions } from './types.js';
 import { resolveImportPath } from './resolver.js';
 import type { ConnectionGraph } from '../graph.js';
@@ -25,7 +25,7 @@ export class JsTsAnalyzer implements Analyzer {
     const normalizedPath = normalizePath(filePath);
     const language = isTypeScript(normalizedPath) ? 'typescript' : 'javascript';
 
-    // 1. Add file node to graph
+    // 1. Add file node to graph immediately
     graph.addFile(normalizedPath, language);
 
     // 2. Parse SourceFile
@@ -92,7 +92,11 @@ export class JsTsAnalyzer implements Analyzer {
 
         // Class methods
         for (const member of node.members) {
-          if (ts.isMethodDeclaration(member) && member.name && ts.isIdentifier(member.name)) {
+          if (
+            ts.isMethodDeclaration(member) &&
+            member.name &&
+            ts.isIdentifier(member.name)
+          ) {
             const methodName = member.name.text;
             const fullMethodName = `${className}.${methodName}`;
             const methodSym = graph.addSymbol(normalizedPath, fullMethodName, 'method');
@@ -128,7 +132,8 @@ export class JsTsAnalyzer implements Analyzer {
             const varName = decl.name.text;
             const isFn =
               decl.initializer &&
-              (ts.isArrowFunction(decl.initializer) || ts.isFunctionExpression(decl.initializer));
+              (ts.isArrowFunction(decl.initializer) ||
+                ts.isFunctionExpression(decl.initializer));
             const symbolType: SymbolType = isFn
               ? 'function'
               : node.declarationList.flags & ts.NodeFlags.Const
@@ -168,7 +173,11 @@ export class JsTsAnalyzer implements Analyzer {
         enclosingSymbolId = `${normalizedPath}:${node.name.text}`;
       } else if (ts.isClassDeclaration(node) && node.name) {
         enclosingSymbolId = `${normalizedPath}:${node.name.text}`;
-      } else if (ts.isMethodDeclaration(node) && node.name && ts.isIdentifier(node.name)) {
+      } else if (
+        ts.isMethodDeclaration(node) &&
+        node.name &&
+        ts.isIdentifier(node.name)
+      ) {
         const className = getParentClassName(node);
         if (className) {
           enclosingSymbolId = `${normalizedPath}:${className}.${node.name.text}`;
@@ -219,17 +228,13 @@ function handleImportDeclaration(
   const targetFile = resolveImportPath(fromFile, specifier, options?.knownFiles);
   if (!targetFile) return;
 
-  // Add file -> file import relationship
   graph.addRelationship('imports', fromFile, targetFile);
   graph.addRelationship('importedBy', targetFile, fromFile);
 
-  // Track imported symbols
   if (node.importClause) {
-    // Default import
     if (node.importClause.name) {
       importsMap.set(node.importClause.name.text, { targetFile, importedName: 'default' });
     }
-    // Named imports
     if (node.importClause.namedBindings) {
       if (ts.isNamedImports(node.importClause.namedBindings)) {
         for (const element of node.importClause.namedBindings.elements) {
@@ -286,7 +291,6 @@ function handleRequireCall(
       graph.addRelationship('imports', fromFile, targetFile);
       graph.addRelationship('importedBy', targetFile, fromFile);
 
-      // Check if assigned in const { foo } = require('./bar')
       if (
         node.parent &&
         ts.isVariableDeclaration(node.parent) &&
@@ -328,7 +332,6 @@ function handleCall(
     calleeName = node.expression.name.text;
   } else return;
 
-  // Ignore built-ins or standard keywords
   if (
     ['console', 'require', 'import', 'Math', 'Object', 'Array', 'Promise', 'JSON'].includes(
       calleeName,
@@ -337,7 +340,6 @@ function handleCall(
     return;
   }
 
-  // 1. Is it imported?
   const imported = importsMap.get(calleeName);
   if (imported) {
     const targetSymbolId = `${imported.targetFile}:${imported.importedName}`;
@@ -346,7 +348,6 @@ function handleCall(
     return;
   }
 
-  // 2. Is it defined in the same file?
   const localSym = topLevelSymbols.get(calleeName);
   if (localSym) {
     graph.addRelationship('calls', callerId, localSym.id);
