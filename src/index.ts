@@ -26,3 +26,13 @@ export { ConnectionGraph, normalizePath } from './graph.js';
 export { serializeConnectionMap, deserializeConnectionMap } from './serialize.js';
 export type { Analyzer, AnalyzerOptions } from './analyzer/index.js';
 export { JsTsAnalyzer, resolveImportPath } from './analyzer/index.js';
+
+export {
+  SUPPORTED_DATA_EXTENSIONS,
+  detectArtifactFormat,
+  isDataArtifact,
+  registerDataArtifacts,
+  inferDataRelationshipType,
+  addDataRelationship,
+  type DataReference,
+} from './data/index.js';

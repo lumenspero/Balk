@@ -1,0 +1,93 @@
+import { detectArtifactFormat } from './formats.js';
+import type { ConnectionGraph } from '../graph.js';
+import { normalizePath } from '../graph.js';
+import type { Confidence } from '../types.js';
+
+export interface DataReference {
+  /** The code file referencing the artifact */
+  readonly sourceFile: string;
+  /** The referenced data artifact path */
+  readonly artifactPath: string;
+  /** Inferred relationship type ('generates' | 'consumes' | 'reads') */
+  readonly relationshipType: 'generates' | 'consumes' | 'reads';
+  /** Confidence level */
+  readonly confidence: Confidence;
+}
+
+const WRITE_KEYWORDS = [
+  'write',
+  'writefile',
+  'writefilesync',
+  'save',
+  'dump',
+  'dumps',
+  'to_json',
+  'to_parquet',
+  'to_csv',
+  'createwritestream',
+];
+
+const READ_KEYWORDS = [
+  'read',
+  'readfile',
+  'readfilesync',
+  'load',
+  'parse',
+  'read_json',
+  'read_parquet',
+  'read_csv',
+  'createreadstream',
+  'fetch',
+];
+
+/**
+ * Infer whether a function/method call context implies generating (writing) or consuming (reading) a data artifact.
+ */
+export function inferDataRelationshipType(callContext: string): 'generates' | 'consumes' | 'reads' {
+  const lower = callContext.toLowerCase();
+
+  for (const kw of WRITE_KEYWORDS) {
+    if (lower.includes(kw)) return 'generates';
+  }
+
+  for (const kw of READ_KEYWORDS) {
+    if (lower.includes(kw)) return 'consumes';
+  }
+
+  // Check for file opening mode flags e.g. open('foo.json', 'w')
+  if (/(['"])(w|wb|a|w\+|wb\+)\1/i.test(lower)) {
+    return 'generates';
+  }
+
+  return 'reads';
+}
+
+/**
+ * Register a data artifact reference in the ConnectionGraph with dual directional relationships.
+ */
+export function addDataRelationship(
+  sourceFile: string,
+  artifactPath: string,
+  relationshipType: 'generates' | 'consumes' | 'reads',
+  graph: ConnectionGraph,
+  confidence: Confidence = 'high',
+): void {
+  const normSource = normalizePath(sourceFile);
+  const normArtifact = normalizePath(artifactPath);
+
+  // Ensure artifact node exists in graph
+  const format = detectArtifactFormat(normArtifact) ?? 'unknown';
+  if (!graph.hasArtifact(normArtifact)) {
+    graph.addArtifact(normArtifact, format);
+  }
+
+  if (relationshipType === 'generates') {
+    graph.addRelationship('generates', normSource, normArtifact, confidence);
+    graph.addRelationship('generatedBy', normArtifact, normSource, confidence);
+  } else if (relationshipType === 'consumes') {
+    graph.addRelationship('consumes', normSource, normArtifact, confidence);
+    graph.addRelationship('consumedBy', normArtifact, normSource, confidence);
+  } else {
+    graph.addRelationship('reads', normSource, normArtifact, confidence);
+  }
+}

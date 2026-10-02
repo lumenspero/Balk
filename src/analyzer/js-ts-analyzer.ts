@@ -4,6 +4,8 @@ import { resolveImportPath } from './resolver.js';
 import type { ConnectionGraph } from '../graph.js';
 import { normalizePath } from '../graph.js';
 import type { SymbolType } from '../types.js';
+import { isDataArtifact } from '../data/formats.js';
+import { inferDataRelationshipType, addDataRelationship } from '../data/data-analyzer.js';
 
 export class JsTsAnalyzer implements Analyzer {
   readonly name = 'JsTsAnalyzer';
@@ -140,6 +142,16 @@ export class JsTsAnalyzer implements Analyzer {
               graph.addRelationship('exports', normalizedPath, sym.id);
             }
           }
+        }
+      }
+
+      // ── Data Artifact References ────────────────────────────────────
+      if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+        const text = node.text;
+        if (isDataArtifact(text)) {
+          const context = node.parent ? node.parent.getText(sourceFile) : '';
+          const relType = inferDataRelationshipType(context);
+          addDataRelationship(normalizedPath, text, relType, graph, 'high');
         }
       }
 
