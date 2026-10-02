@@ -54,18 +54,18 @@ Install globally or as a project devDependency:
 
 ```bash
 # Global installation
-npm install -g balk2
+npm install -g @lumenspero/balk2
 
 # Or project-level dev dependency
-npm install --save-dev balk2
+npm install --save-dev @lumenspero/balk2
 ```
 
 ### Basic Usage
 
-Run `balk2` inside any repository:
+Run `@lumenspero/balk2` inside any repository:
 
 ```bash
-npx balk2
+npx @lumenspero/balk2
 ```
 
 This generates:
@@ -83,11 +83,11 @@ Scans the repository, builds the connection graph, and writes `connection-map.js
 
 ```bash
 # Default generation
-npx balk2
+npx @lumenspero/balk2
 
 # Custom output directory or base filename
-npx balk2 --output build/connection-map
-npx balk2 -o custom-dir/
+npx @lumenspero/balk2 --output build/connection-map
+npx @lumenspero/balk2 -o custom-dir/
 ```
 
 ### `balk2 install`
@@ -95,7 +95,7 @@ npx balk2 -o custom-dir/
 Installs a Git `pre-commit` hook in `.git/hooks/pre-commit`. The hook automatically regenerates the connection map and stages updated artifacts whenever you make a commit.
 
 ```bash
-npx balk2 install
+npx @lumenspero/balk2 install
 ```
 
 ### `balk2 uninstall`
@@ -103,7 +103,7 @@ npx balk2 install
 Removes the installed Balk2 Git pre-commit hook.
 
 ```bash
-npx balk2 uninstall
+npx @lumenspero/balk2 uninstall
 ```
 
 ### `balk2 check`
@@ -111,7 +111,7 @@ npx balk2 uninstall
 Validates configuration and checks whether `connection-map.json` is up to date with current repository state. Exits with code `0` if current, or `1` if out of date. Useful for CI checks.
 
 ```bash
-npx balk2 check
+npx @lumenspero/balk2 check
 ```
 
 ---
@@ -172,7 +172,7 @@ import {
   renderMarkdown,
   serializeConnectionMap,
   generateConnectionMap,
-} from 'balk2';
+} from '@lumenspero/balk2';
 
 // High-level API: Generate map for a directory
 const { jsonPath, mdPath, map } = generateConnectionMap({
@@ -228,6 +228,15 @@ npm run build
 
 ---
 
+## Sponsor
+
+[![Sponsor via Stripe](https://img.shields.io/badge/Sponsor%20via-Stripe-6772e5?style=for-the-badge&logo=stripe&logoColor=white)](https://donate.stripe.com/4gM3cv4L14y03Ql18k0Fi04)
+
+---
+
 ## License
 
 [MIT License](LICENSE) © 2026
+
+
+[def]: https://donate.stripe.com/4gM3cv4L14y03Ql18k0Fi04
