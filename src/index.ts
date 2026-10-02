@@ -36,3 +36,11 @@ export {
   addDataRelationship,
   type DataReference,
 } from './data/index.js';
+
+export {
+  renderMarkdown,
+  findConnectionPaths,
+  type MarkdownOptions,
+  type PathFinderOptions,
+  type FormattedPath,
+} from './renderer/index.js';
