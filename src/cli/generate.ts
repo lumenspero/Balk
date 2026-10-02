@@ -6,7 +6,7 @@ import { renderMarkdown } from '../renderer/markdown-renderer.js';
 import { JsTsAnalyzer, PythonAnalyzer, type Analyzer } from '../analyzer/index.js';
 import { registerDataArtifacts } from '../data/formats.js';
 import { getGitCommitHash } from './git-utils.js';
-import { loadBalkConfig, filterFilesWithConfig, applyExplicitLineage } from '../config/index.js';
+import { loadBalk2Config, filterFilesWithConfig, applyExplicitLineage } from '../config/index.js';
 import type { ConnectionMap } from '../types.js';
 
 export interface GenerateOptions {
@@ -90,7 +90,7 @@ export function generateConnectionMap(options: GenerateOptions = {}): GenerateRe
   });
 
   // 6. Determine output file paths
-  const outputTarget = options.output ?? balkConfig?.output;
+  const outputTarget = options.output ?? balk2Config?.output;
   const { jsonPath, mdPath } = resolveOutputPaths(rootDir, outputTarget);
 
   // Ensure output directory exists

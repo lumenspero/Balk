@@ -1,6 +1,6 @@
 export {
-  loadBalkConfig,
-  type BalkConfig,
+  loadBalk2Config,
+  type Balk2Config,
   type DataConfig,
   type DataLineageEntry,
 } from './balk2-config.js';

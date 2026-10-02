@@ -19,7 +19,7 @@ export interface DataConfig {
   readonly lineage?: readonly DataLineageEntry[];
 }
 
-export interface BalkConfig {
+export interface Balk2Config {
   /** Glob or path patterns of files to include */
   readonly include?: readonly string[];
   /** Glob or path patterns of files to exclude */
@@ -36,7 +36,7 @@ export interface BalkConfig {
 export function loadBalk2Config(
   cwd: string = process.cwd(),
   customPath?: string,
-): BalkConfig | undefined {
+): Balk2Config | undefined {
   const configPath = customPath
     ? path.resolve(cwd, customPath)
     : path.join(path.resolve(cwd), '.balk2.json');
@@ -49,7 +49,7 @@ export function loadBalk2Config(
     const content = fs.readFileSync(configPath, 'utf8');
     const parsed: unknown = JSON.parse(content);
     if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-      return parsed as BalkConfig;
+      return parsed as Balk2Config;
     }
     return undefined;
   } catch {

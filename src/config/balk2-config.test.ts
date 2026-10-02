@@ -176,7 +176,7 @@ describe('.balk2.json Configuration & Data Lineage', () => {
         },
       };
 
-      fs.writeFileSync(path.join(tmpDir, '.balk2.json'), JSON.stringify(balkConfig, null, 2));
+      fs.writeFileSync(path.join(tmpDir, '.balk2.json'), JSON.stringify(balk2Config, null, 2));
 
       // Setup source files
       const srcDataDir = path.join(tmpDir, 'src', 'data');
