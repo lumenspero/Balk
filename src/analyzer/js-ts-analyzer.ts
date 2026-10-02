@@ -92,11 +92,7 @@ export class JsTsAnalyzer implements Analyzer {
 
         // Class methods
         for (const member of node.members) {
-          if (
-            ts.isMethodDeclaration(member) &&
-            member.name &&
-            ts.isIdentifier(member.name)
-          ) {
+          if (ts.isMethodDeclaration(member) && member.name && ts.isIdentifier(member.name)) {
             const methodName = member.name.text;
             const fullMethodName = `${className}.${methodName}`;
             const methodSym = graph.addSymbol(normalizedPath, fullMethodName, 'method');
@@ -132,8 +128,7 @@ export class JsTsAnalyzer implements Analyzer {
             const varName = decl.name.text;
             const isFn =
               decl.initializer &&
-              (ts.isArrowFunction(decl.initializer) ||
-                ts.isFunctionExpression(decl.initializer));
+              (ts.isArrowFunction(decl.initializer) || ts.isFunctionExpression(decl.initializer));
             const symbolType: SymbolType = isFn
               ? 'function'
               : node.declarationList.flags & ts.NodeFlags.Const
@@ -173,11 +168,7 @@ export class JsTsAnalyzer implements Analyzer {
         enclosingSymbolId = `${normalizedPath}:${node.name.text}`;
       } else if (ts.isClassDeclaration(node) && node.name) {
         enclosingSymbolId = `${normalizedPath}:${node.name.text}`;
-      } else if (
-        ts.isMethodDeclaration(node) &&
-        node.name &&
-        ts.isIdentifier(node.name)
-      ) {
+      } else if (ts.isMethodDeclaration(node) && node.name && ts.isIdentifier(node.name)) {
         const className = getParentClassName(node);
         if (className) {
           enclosingSymbolId = `${normalizedPath}:${className}.${node.name.text}`;
