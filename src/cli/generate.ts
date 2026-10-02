@@ -6,6 +6,7 @@ import { renderMarkdown } from '../renderer/markdown-renderer.js';
 import { JsTsAnalyzer } from '../analyzer/js-ts-analyzer.js';
 import { registerDataArtifacts } from '../data/formats.js';
 import { getGitCommitHash } from './git-utils.js';
+import { loadBalkConfig, filterFilesWithConfig, applyExplicitLineage } from '../config/index.js';
 import type { ConnectionMap } from '../types.js';
 
 export interface GenerateOptions {
@@ -41,16 +42,27 @@ const DEFAULT_EXCLUDES = new Set([
  */
 export function generateConnectionMap(options: GenerateOptions = {}): GenerateResult {
   const rootDir = path.resolve(options.cwd ?? process.cwd());
+  const balkConfig = loadBalkConfig(rootDir);
   const jsTsAnalyzer = new JsTsAnalyzer();
   const graph = new ConnectionGraph();
 
-  // 1. Scan directory for repository files
-  const allRelativeFiles = scanFiles(rootDir);
+  // 1. Scan directory for repository files & apply config filters
+  const rawFiles = scanFiles(rootDir);
+  const allRelativeFiles = filterFilesWithConfig(
+    rawFiles,
+    balkConfig?.include,
+    balkConfig?.exclude,
+  );
 
   // 2. Register data artifacts
   registerDataArtifacts(allRelativeFiles, graph);
 
-  // 3. Analyze code files
+  // 3. Apply explicit data lineage rules from .balk.json
+  if (balkConfig?.data?.lineage) {
+    applyExplicitLineage(balkConfig.data.lineage, graph);
+  }
+
+  // 4. Analyze code files
   for (const relFile of allRelativeFiles) {
     if (jsTsAnalyzer.canAnalyze(relFile)) {
       const fullPath = path.join(rootDir, relFile);
@@ -66,7 +78,7 @@ export function generateConnectionMap(options: GenerateOptions = {}): GenerateRe
     }
   }
 
-  // 4. Build connection map
+  // 5. Build connection map
   const commit = getGitCommitHash(rootDir);
   const generatedAt = options.timestamp ?? new Date().toISOString();
 
@@ -75,8 +87,9 @@ export function generateConnectionMap(options: GenerateOptions = {}): GenerateRe
     generatedAt,
   });
 
-  // 5. Determine output file paths
-  const { jsonPath, mdPath } = resolveOutputPaths(rootDir, options.output);
+  // 6. Determine output file paths
+  const outputTarget = options.output ?? balkConfig?.output;
+  const { jsonPath, mdPath } = resolveOutputPaths(rootDir, outputTarget);
 
   // Ensure output directory exists
   const jsonDir = path.dirname(jsonPath);

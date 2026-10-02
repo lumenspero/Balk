@@ -5,6 +5,7 @@ import { ConnectionGraph } from '../graph.js';
 import { JsTsAnalyzer } from '../analyzer/js-ts-analyzer.js';
 import { registerDataArtifacts } from '../data/formats.js';
 import { normalizePath } from '../graph.js';
+import { loadBalkConfig, filterFilesWithConfig, applyExplicitLineage } from '../config/index.js';
 
 export interface CheckOptions {
   readonly cwd?: string;
@@ -34,6 +35,7 @@ const DEFAULT_EXCLUDES = new Set([
  */
 export function checkConnectionMap(options: CheckOptions = {}): CheckResult {
   const rootDir = path.resolve(options.cwd ?? process.cwd());
+  const balkConfig = loadBalkConfig(rootDir);
   const jsonPath = path.join(rootDir, 'connection-map.json');
 
   if (!fs.existsSync(jsonPath)) {
@@ -50,9 +52,14 @@ export function checkConnectionMap(options: CheckOptions = {}): CheckResult {
     // Build fresh graph
     const jsTsAnalyzer = new JsTsAnalyzer();
     const graph = new ConnectionGraph();
-    const allFiles = scanFiles(rootDir);
+    const rawFiles = scanFiles(rootDir);
+    const allFiles = filterFilesWithConfig(rawFiles, balkConfig?.include, balkConfig?.exclude);
 
     registerDataArtifacts(allFiles, graph);
+
+    if (balkConfig?.data?.lineage) {
+      applyExplicitLineage(balkConfig.data.lineage, graph);
+    }
 
     for (const relFile of allFiles) {
       if (jsTsAnalyzer.canAnalyze(relFile)) {

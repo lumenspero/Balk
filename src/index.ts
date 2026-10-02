@@ -58,3 +58,13 @@ export {
   type CheckOptions,
   type CheckResult,
 } from './cli/index.js';
+
+export {
+  loadBalkConfig,
+  applyExplicitLineage,
+  filterFilesWithConfig,
+  matchPattern,
+  type BalkConfig,
+  type DataConfig,
+  type DataLineageEntry,
+} from './config/index.js';
